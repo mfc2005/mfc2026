@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ruta Austral 4x4</title>
+<meta name="description" content="Arriendo de camionetas 4x4 equipadas para rutas de ripio, alta montaña y desierto en Chile. Sitio de ejemplo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: hero de ancho completo con curvas de nivel + formulario de reserva; luego secciones en grilla de 12 columnas que se apilan en móvil. */
+:root {
+  --bg: #F1F3EF;          /* gris basalto claro, con sesgo verde lenga */
+  --surface: #FFFFFF;
+  --ink: #14201C;
+  --ink-soft: #46534E;
+  --line: #D5DBD4;
+  --accent: #EA580C;      /* naranja aventura (UI UX Pro Max) */
+  --on-accent: #000000;
+  --map: #0E7490;         /* teal de carta topográfica */
+  --map-soft: #D6ECF1;
+  --hero-bg: #1B2622;
+  --hero-ink: #F1F3EF;
+  --hero-line: rgba(241, 243, 239, 0.14);
+  --error: #B91C1C;
+  --ok: #15803D;
+
+  --font-display: "Bebas Neue", "Oswald", "Arial Narrow", Impact, sans-serif;
+  --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --step--1: 0.875rem;
+  --step-0: 1rem;
+  --step-1: 1.25rem;
+  --step-2: 1.75rem;
+  --step-3: clamp(2.25rem, 5vw, 3.25rem);
+  --step-4: clamp(3.25rem, 10vw, 7.5rem);
+
+  --radius: 6px;
+  --gutter: clamp(16px, 4vw, 40px);
+  --maxw: 1180px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F1513; --surface: #18201D; --ink: #E7ECE8; --ink-soft: #A9B5AF; --line: #2C3833;
+    --accent: #F97316; --on-accent: #000000; --map: #22B8D6; --map-soft: #12323A;
+    --hero-bg: #0A0F0D; --hero-ink: #E7ECE8; --hero-line: rgba(231, 236, 232, 0.12);
+    --error: #F87171; --ok: #4ADE80; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F1513; --surface: #18201D; --ink: #E7ECE8; --ink-soft: #A9B5AF; --line: #2C3833;
+  --accent: #F97316; --on-accent: #000000; --map: #22B8D6; --map-soft: #12323A;
+  --hero-bg: #0A0F0D; --hero-ink: #E7ECE8; --hero-line: rgba(231, 236, 232, 0.12);
+  --error: #F87171; --ok: #4ADE80; color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+img, svg, canvas { max-width: 100%; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 400; line-height: 0.95; letter-spacing: 0.01em; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+.wrap { width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: var(--gutter); }
+.eyebrow { font-family: var(--font-data); font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase; color: var(--map); }
+.lead { color: var(--ink-soft); font-size: var(--step-1); max-width: 60ch; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  min-height: 48px; padding: 0 1.4rem; border: 2px solid transparent; border-radius: var(--radius);
+  font: 700 var(--step-0)/1 var(--font-body); text-decoration: none; cursor: pointer;
+  transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+.btn-primary { background: var(--accent); color: var(--on-accent); }
+.btn-primary:hover { transform: translateY(-1px); background: color-mix(in srgb, var(--accent) 88%, #fff); }
+.btn-ghost { border-color: currentColor; color: inherit; background: transparent; }
+.btn-ghost:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+.btn svg { width: 20px; height: 20px; flex: none; }
+
+/* ---------- Nav ---------- */
+.nav {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: color-mix(in srgb, var(--hero-bg) 92%, transparent);
+  backdrop-filter: blur(8px); color: var(--hero-ink);
+  border-bottom: 1px solid var(--hero-line);
+}
+.nav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 64px; }
+.brand { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; font-family: var(--font-display); font-size: 1.6rem; letter-spacing: 0.04em; }
+.brand svg { width: 30px; height: 30px; color: var(--accent); }
+.nav-links { display: flex; gap: 1.5rem; list-style: none; margin: 0; padding: 0; font-weight: 600; }
+.nav-links a { text-decoration: none; opacity: 0.85; padding-block: 0.5rem; }
+.nav-links a:hover { opacity: 1; text-decoration: underline; text-underline-offset: 6px; text-decoration-color: var(--accent); }
+.nav .btn { min-height: 44px; padding: 0 1rem; }
+@media (max-width: 860px) { .nav-links { display: none; } }
+
+/* ---------- Hero ---------- */
+.hero { position: relative; background: var(--hero-bg); color: var(--hero-ink); overflow: hidden; isolation: isolate; }
+.hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; }
+.hero .wrap {
+  display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: clamp(2rem, 5vw, 4rem);
+  align-items: center; padding-block: clamp(3rem, 8vw, 6rem);
+}
+.hero-copy { display: grid; gap: 1.5rem; min-width: 0; }
+.hero h1 { font-size: var(--step-4); }
+.hero h1 span { color: var(--accent); }
+.hero .lead { color: color-mix(in srgb, var(--hero-ink) 78%, transparent); }
+.hero .eyebrow { color: color-mix(in srgb, var(--hero-ink) 70%, transparent); }
+.coords { font-family: var(--font-data); font-size: var(--step--1); color: color-mix(in srgb, var(--hero-ink) 60%, transparent); display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+
+/* ---------- Booking card ---------- */
+.booking {
+  background: var(--surface); color: var(--ink); border-radius: 10px; padding: clamp(1.25rem, 3vw, 2rem);
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.55); display: grid; gap: 1rem; min-width: 0;
+}
+.booking h2 { font-size: var(--step-2); }
+.field { display: grid; gap: 0.35rem; min-width: 0; }
+.field label { font-weight: 600; font-size: var(--step--1); }
+.field input, .field select {
+  width: 100%; min-height: 48px; padding: 0 0.85rem; font: inherit; color: var(--ink);
+  background: var(--bg); border: 1.5px solid var(--line); border-radius: var(--radius);
+}
+.field input:focus-visible, .field select:focus-visible { outline: 3px solid var(--map); outline-offset: 1px; border-color: var(--map); }
+.field[data-invalid] input, .field[data-invalid] select { border-color: var(--error); }
+.field .hint { font-size: var(--step--1); color: var(--ink-soft); }
+.field .err { font-size: var(--step--1); color: var(--error); font-weight: 600; }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.quote {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap;
+  padding: 0.85rem 1rem; background: var(--map-soft); border-radius: var(--radius);
+  font-family: var(--font-data); font-variant-numeric: tabular-nums; font-size: var(--step--1);
+}
+.quote strong { font-size: var(--step-1); color: var(--ink); }
+.error-summary { border: 2px solid var(--error); border-radius: var(--radius); padding: 0.75rem 1rem; }
+.error-summary h3 { font-family: var(--font-body); font-weight: 700; font-size: var(--step-0); color: var(--error); }
+.error-summary ul { margin: 0.35rem 0 0; padding-left: 1.2rem; }
+.success { border: 2px solid var(--ok); border-radius: var(--radius); padding: 0.85rem 1rem; }
+.success strong { color: var(--ok); }
+.fine { font-size: var(--step--1); color: var(--ink-soft); }
+
+/* ---------- Strip ---------- */
+.strip { border-bottom: 1px solid var(--line); background: var(--surface); }
+.strip .wrap { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; padding-block: 1.75rem; }
+.stat { display: grid; gap: 0.15rem; }
+.stat b { font-family: var(--font-display); font-weight: 400; font-size: var(--step-3); line-height: 1; font-variant-numeric: tabular-nums; }
+.stat span { color: var(--ink-soft); font-size: var(--step--1); }
+@media (max-width: 720px) { .strip .wrap { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ---------- Sections ---------- */
+section.block { padding-block: clamp(3.5rem, 8vw, 6rem); }
+.block-head { display: grid; gap: 0.75rem; margin-bottom: clamp(2rem, 4vw, 3rem); }
+.block-head h2 { font-size: var(--step-3); }
+
+/* Fleet */
+.fleet { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; }
+.truck { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: grid; grid-template-rows: auto 1fr; }
+.truck figure { margin: 0; aspect-ratio: 16 / 9; max-width: 100%; background: var(--map-soft); display: grid; place-items: center; }
+.truck figure svg { width: 82%; height: auto; color: var(--ink); }
+.truck .body { padding: 1.25rem; display: grid; gap: 1rem; align-content: start; }
+.truck h3 { font-size: var(--step-2); }
+.truck .tag { font-family: var(--font-data); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--map); }
+.specs { display: grid; grid-template-columns: 1fr auto; gap: 0.35rem 1rem; margin: 0; font-size: var(--step--1); }
+.specs dt { color: var(--ink-soft); }
+.specs dd { margin: 0; font-family: var(--font-data); font-variant-numeric: tabular-nums; text-align: right; }
+.price { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; padding-top: 1rem; border-top: 1px dashed var(--line); }
+.price b { font-family: var(--font-display); font-weight: 400; font-size: var(--step-2); font-variant-numeric: tabular-nums; }
+.price span { font-size: var(--step--1); color: var(--ink-soft); }
+.truck .btn { width: 100%; }
+@media (max-width: 960px) { .fleet { grid-template-columns: 1fr; max-width: 560px; } }
+
+/* Routes */
+.routes { background: var(--hero-bg); color: var(--hero-ink); }
+.routes .lead { color: color-mix(in srgb, var(--hero-ink) 75%, transparent); }
+.routes .eyebrow { color: var(--accent); }
+.route-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border-top: 1px solid var(--hero-line); }
+.route { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr) auto; gap: 1.5rem; align-items: center; padding-block: 1.5rem; border-bottom: 1px solid var(--hero-line); }
+.route h3 { font-size: var(--step-2); }
+.route .meta { font-family: var(--font-data); font-size: var(--step--1); color: color-mix(in srgb, var(--hero-ink) 65%, transparent); font-variant-numeric: tabular-nums; }
+.route p { color: color-mix(in srgb, var(--hero-ink) 80%, transparent); }
+.grade { display: inline-flex; gap: 4px; align-items: center; font-family: var(--font-data); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
+.grade i { width: 10px; height: 18px; border-radius: 2px; background: var(--hero-line); }
+.grade i.on { background: var(--accent); }
+@media (max-width: 760px) { .route { grid-template-columns: 1fr; gap: 0.6rem; } }
+
+/* Steps */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.5rem; counter-reset: step; }
+.steps li { display: grid; gap: 0.6rem; align-content: start; counter-increment: step; padding-top: 1rem; border-top: 3px solid var(--ink); }
+.steps li::before { content: "Paso " counter(step); font-family: var(--font-data); font-size: var(--step--1); color: var(--map); }
+.steps h3 { font-size: var(--step-1); font-family: var(--font-body); font-weight: 700; line-height: 1.25; }
+.steps p { color: var(--ink-soft); }
+@media (max-width: 860px) { .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .steps { grid-template-columns: 1fr; } }
+
+/* Includes */
+.split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(1.5rem, 4vw, 3rem); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: clamp(1.25rem, 3vw, 2rem); display: grid; gap: 1rem; align-content: start; min-width: 0; }
+.panel h3 { font-size: var(--step-2); }
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
+.checks li { display: grid; grid-template-columns: 24px 1fr; gap: 0.75rem; align-items: start; }
+.checks svg { width: 24px; height: 24px; color: var(--map); }
+@media (max-width: 760px) { .split { grid-template-columns: 1fr; } }
+
+/* FAQ */
+.faq { display: grid; gap: 0; border-top: 1px solid var(--line); max-width: 820px; }
+.faq details { border-bottom: 1px solid var(--line); }
+.faq summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 1rem; min-height: 56px; padding-block: 0.75rem; font-weight: 700; font-size: var(--step-1); }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary svg { width: 22px; height: 22px; flex: none; transition: transform 200ms ease; color: var(--map); }
+.faq details[open] summary svg { transform: rotate(45deg); }
+.faq details p { padding-bottom: 1.25rem; color: var(--ink-soft); max-width: 65ch; }
+
+/* CTA + footer */
+.cta { background: var(--accent); color: var(--on-accent); }
+.cta .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1.5rem; padding-block: clamp(2.5rem, 6vw, 4rem); }
+.cta h2 { font-size: var(--step-3); max-width: 18ch; }
+.cta .btn { background: #000; color: #fff; }
+.cta .btn:hover { background: #1f1f1f; }
+footer { background: var(--hero-bg); color: color-mix(in srgb, var(--hero-ink) 75%, transparent); font-size: var(--step--1); }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; padding-block: 2rem; }
+footer .mono { font-family: var(--font-data); }
+
+@media (max-width: 900px) {
+  .hero .wrap { grid-template-columns: 1fr; }
+}
+@media (max-width: 420px) {
+  .row-2 { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-mountain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m2 20 7-12 4 6 3-4 6 10z"/></symbol>
+  <symbol id="truck-pickup" viewBox="0 0 320 150">
+    <path d="M18 98h284v14H18z" fill="currentColor" opacity=".15"/>
+    <path d="M24 92V70l26-6 30-30h86l20 30h96c10 0 14 6 14 14v14H24z" fill="currentColor"/>
+    <path d="M90 42h34v24H72zM132 42h30l14 24h-44z" style="fill:var(--map-soft)"/>
+    <path d="M198 64h92" style="stroke:var(--map-soft)" stroke-width="3"/>
+    <circle cx="84" cy="102" r="26" fill="currentColor"/><circle cx="84" cy="102" r="11" style="fill:var(--map-soft)"/>
+    <circle cx="246" cy="102" r="26" fill="currentColor"/><circle cx="246" cy="102" r="11" style="fill:var(--map-soft)"/>
+    <path d="M300 74h10v10h-10z" style="fill:var(--accent)"/>
+  </symbol>
+  <symbol id="truck-suv" viewBox="0 0 320 150">
+    <path d="M18 98h284v14H18z" fill="currentColor" opacity=".15"/>
+    <path d="M26 92V58c0-8 4-12 12-14l40-6 28-14h140c12 0 18 6 22 16l18 36c2 4 2 8 2 12v4H26z" fill="currentColor"/>
+    <path d="M116 32h50v26h-70zM176 32h56c6 0 10 2 12 8l8 18h-76z" style="fill:var(--map-soft)"/>
+    <path d="M110 16h150" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="86" cy="102" r="26" fill="currentColor"/><circle cx="86" cy="102" r="11" style="fill:var(--map-soft)"/>
+    <circle cx="244" cy="102" r="26" fill="currentColor"/><circle cx="244" cy="102" r="11" style="fill:var(--map-soft)"/>
+    <path d="M290 70h12v10h-12z" style="fill:var(--accent)"/>
+  </symbol>
+  <symbol id="truck-camper" viewBox="0 0 320 150">
+    <path d="M18 98h284v14H18z" fill="currentColor" opacity=".15"/>
+    <path d="M24 92V70l26-6 30-30h76l16 30h120c10 0 14 6 14 14v14H24z" fill="currentColor"/>
+    <path d="M168 28h126c6 0 8 4 8 8v28H168z" fill="currentColor"/>
+    <path d="M168 20h126" style="stroke:var(--accent)" stroke-width="6"/>
+    <path d="M90 42h28v22H72zM126 42h24l12 22h-36z" style="fill:var(--map-soft)"/>
+    <path d="M190 40h40v14h-40z" style="fill:var(--map-soft)"/>
+    <circle cx="84" cy="102" r="26" fill="currentColor"/><circle cx="84" cy="102" r="11" style="fill:var(--map-soft)"/>
+    <circle cx="246" cy="102" r="26" fill="currentColor"/><circle cx="246" cy="102" r="11" style="fill:var(--map-soft)"/>
+  </symbol>
+</svg>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Ruta Austral 4x4, inicio">
+      <svg aria-hidden="true"><use href="#i-mountain"/></svg>
+      Ruta Austral 4x4
+    </a>
+    <nav aria-label="Principal">
+      <ul class="nav-links">
+        <li><a href="#flota">Flota</a></li>
+        <li><a href="#rutas">Rutas</a></li>
+        <li><a href="#como-funciona">Cómo funciona</a></li>
+        <li><a href="#preguntas">Preguntas</a></li>
+      </ul>
+    </nav>
+    <a class="btn btn-primary" href="#reserva">Cotizar</a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero" aria-labelledby="hero-title">
+    <canvas id="contours" aria-hidden="true"></canvas>
+    <div class="wrap">
+      <div class="hero-copy">
+        <p class="eyebrow">Arriendo de camionetas 4x4 · Chile</p>
+        <h1 id="hero-title">Donde termina el pavimento, <span>empieza tu ruta</span></h1>
+        <p class="lead">Camionetas con reductora, neumáticos all-terrain y equipo de montaña listos para la Carretera Austral, el altiplano y los pasos cordilleranos. Retira en Santiago, Puerto Montt o Calama.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#flota">Ver la flota <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+          <a class="btn btn-ghost" href="#rutas">Rutas recomendadas</a>
+        </div>
+        <p class="coords" aria-label="Sucursales">
+          <span>SCL 33°26′S 70°39′O</span>
+          <span>PMC 41°28′S 72°56′O</span>
+          <span>CJC 22°27′S 68°55′O</span>
+        </p>
+      </div>
+
+      <form class="booking" id="reserva" novalidate aria-labelledby="booking-title">
+        <h2 id="booking-title">Cotiza tu arriendo</h2>
+        <div id="error-summary" class="error-summary" tabindex="-1" role="alert" hidden>
+          <h3>Revisa estos campos</h3>
+          <ul id="error-list"></ul>
+        </div>
+        <div class="field">
+          <label for="sucursal">Sucursal de retiro</label>
+          <select id="sucursal" name="sucursal" required>
+            <option value="">Elige una sucursal</option>
+            <option value="scl">Santiago · Aeropuerto SCL</option>
+            <option value="pmc">Puerto Montt · El Tepual</option>
+            <option value="cjc">Calama · El Loa</option>
+          </select>
+          <p class="err" id="sucursal-err" hidden></p>
+        </div>
+        <div class="row-2">
+          <div class="field">
+            <label for="desde">Retiro</label>
+            <input id="desde" name="desde" type="date" required>
+            <p class="err" id="desde-err" hidden></p>
+          </div>
+          <div class="field">
+            <label for="hasta">Devolución</label>
+            <input id="hasta" name="hasta" type="date" required>
+            <p class="err" id="hasta-err" hidden></p>
+          </div>
+        </div>
+        <div class="field">
+          <label for="modelo">Camioneta</label>
+          <select id="modelo" name="modelo">
+            <option value="hilux">Doble cabina 2.8 · $79.000/día</option>
+            <option value="land">SUV 7 plazas · $98.000/día</option>
+            <option value="camper">Doble cabina + camper · $129.000/día</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="email">Correo</label>
+          <input id="email" name="email" type="email" autocomplete="email" placeholder="nombre@correo.cl" required>
+          <p class="hint" id="email-hint">Te enviamos la cotización y el contrato a este correo.</p>
+          <p class="err" id="email-err" hidden></p>
+        </div>
+        <div class="quote" aria-live="polite">
+          <span id="quote-days">Elige fechas para calcular</span>
+          <strong id="quote-total">—</strong>
+        </div>
+        <button class="btn btn-primary" type="submit">Pedir cotización</button>
+        <div id="success" class="success" role="status" hidden></div>
+        <p class="fine">Kilometraje libre. IVA incluido. Mínimo 3 días.</p>
+      </form>
+    </div>
+  </section>
+
+  <div class="strip">
+    <div class="wrap">
+      <div class="stat"><b>24</b><span>camionetas en flota</span></div>
+      <div class="stat"><b>4.800 m</b><span>altura máxima cubierta por seguro</span></div>
+      <div class="stat"><b>24/7</b><span>asistencia en ruta satelital</span></div>
+      <div class="stat"><b>0 km</b><span>de cargo por kilometraje</span></div>
+    </div>
+  </div>
+
+  <section class="block" id="flota" aria-labelledby="flota-title">
+    <div class="wrap">
+      <div class="block-head">
+        <p class="eyebrow">Flota</p>
+        <h2 id="flota-title">Tres camionetas, una para cada terreno</h2>
+        <p class="lead">Todas con tracción 4x4 con reductora, dos neumáticos de repuesto, kit de arrastre y compresor.</p>
+      </div>
+      <div class="fleet">
+        <article class="truck">
+          <figure><svg viewBox="0 0 320 150" role="img" aria-label="Ilustración de camioneta doble cabina"><use href="#truck-pickup"/></svg></figure>
+          <div class="body">
+            <p class="tag">Ripio y montaña</p>
+            <h3>Doble cabina 2.8 diésel</h3>
+            <dl class="specs">
+              <dt>Altura libre al suelo</dt><dd>286 mm</dd>
+              <dt>Ángulo de ataque</dt><dd>29°</dd>
+              <dt>Vadeo máximo</dt><dd>700 mm</dd>
+              <dt>Plazas</dt><dd>5</dd>
+            </dl>
+            <div class="price"><b>$79.000</b><span>por día</span></div>
+            <a class="btn btn-primary" href="#reserva" data-model="hilux">Cotizar esta</a>
+          </div>
+        </article>
+        <article class="truck">
+          <figure><svg viewBox="0 0 320 150" role="img" aria-label="Ilustración de SUV 4x4"><use href="#truck-suv"/></svg></figure>
+          <div class="body">
+            <p class="tag">Familia y altiplano</p>
+            <h3>SUV 7 plazas 2.8 diésel</h3>
+            <dl class="specs">
+              <dt>Altura libre al suelo</dt><dd>215 mm</dd>
+              <dt>Ángulo de ataque</dt><dd>31°</dd>
+              <dt>Vadeo máximo</dt><dd>700 mm</dd>
+              <dt>Plazas</dt><dd>7</dd>
+            </dl>
+            <div class="price"><b>$98.000</b><span>por día</span></div>
+            <a class="btn btn-primary" href="#reserva" data-model="land">Cotizar esta</a>
+          </div>
+        </article>
+        <article class="truck">
+          <figure><svg viewBox="0 0 320 150" role="img" aria-label="Ilustración de camioneta con camper en el techo"><use href="#truck-camper"/></svg></figure>
+          <div class="body">
+            <p class="tag">Expedición</p>
+            <h3>Doble cabina + camper</h3>
+            <dl class="specs">
+              <dt>Carpa de techo</dt><dd>2 personas</dd>
+              <dt>Refrigerador 12 V</dt><dd>40 L</dd>
+              <dt>Bidón de agua</dt><dd>40 L</dd>
+              <dt>Plazas</dt><dd>4</dd>
+            </dl>
+            <div class="price"><b>$129.000</b><span>por día</span></div>
+            <a class="btn btn-primary" href="#reserva" data-model="camper">Cotizar esta</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="block routes" id="rutas" aria-labelledby="rutas-title">
+    <div class="wrap">
+      <div class="block-head">
+        <p class="eyebrow">Rutas</p>
+        <h2 id="rutas-title">Rutas que recorren nuestros clientes</h2>
+        <p class="lead">Te entregamos el track GPX y el estado del camino actualizado el día del retiro.</p>
+      </div>
+      <ul class="route-list">
+        <li class="route">
+          <div>
+            <h3>Carretera Austral</h3>
+            <p class="meta">Puerto Montt → Villa O'Higgins · 1.240 km · 10–14 días</p>
+          </div>
+          <p>Ripio, transbordadores y glaciares colgantes. Ideal para la doble cabina con camper.</p>
+          <span class="grade" aria-label="Dificultad 2 de 4"><i class="on"></i><i class="on"></i><i></i><i></i> Media</span>
+        </li>
+        <li class="route">
+          <div>
+            <h3>Salar de Tara y lagunas altiplánicas</h3>
+            <p class="meta">Calama → San Pedro de Atacama · 4.300 m s. n. m. · 5–7 días</p>
+          </div>
+          <p>Altura, arena y temperaturas bajo cero de noche. Exige aclimatación y doble repuesto.</p>
+          <span class="grade" aria-label="Dificultad 4 de 4"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i> Alta</span>
+        </li>
+        <li class="route">
+          <div>
+            <h3>Cajón del Maipo y Embalse El Yeso</h3>
+            <p class="meta">Santiago → El Yeso · 2.500 m s. n. m. · 1–2 días</p>
+          </div>
+          <p>Escapada corta de fin de semana con cruces de estero en primavera.</p>
+          <span class="grade" aria-label="Dificultad 1 de 4"><i class="on"></i><i></i><i></i><i></i> Baja</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="block" id="como-funciona" aria-labelledby="pasos-title">
+    <div class="wrap">
+      <div class="block-head">
+        <p class="eyebrow">Cómo funciona</p>
+        <h2 id="pasos-title">De la cotización al ripio en cuatro pasos</h2>
+      </div>
+      <ol class="steps">
+        <li><h3>Cotiza en línea</h3><p>Elige sucursal, fechas y camioneta. Respondemos en menos de 2 horas hábiles.</p></li>
+        <li><h3>Confirma con garantía</h3><p>Bloqueo de $800.000 en tarjeta de crédito, liberado al devolver.</p></li>
+        <li><h3>Inducción de 30 minutos</h3><p>Uso de reductora, presión de neumáticos y kit de arrastre antes de salir.</p></li>
+        <li><h3>Devuelve sin lavar</h3><p>El barro es parte del viaje. Solo devuélvela con el estanque lleno.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="block" aria-labelledby="incluye-title" style="padding-top:0">
+    <div class="wrap split">
+      <div class="panel">
+        <h3 id="incluye-title">Incluido en todo arriendo</h3>
+        <ul class="checks">
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Seguro con deducible de 20 UF, válido en ripio y sobre 4.000 m</span></li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Permiso para cruzar a Argentina y Bolivia (con aviso de 10 días)</span></li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Comunicador satelital con botón SOS</span></li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Dos neumáticos de repuesto, compresor y eslinga de arrastre</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Requisitos para conducir</h3>
+        <ul class="checks">
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span>23 años o más y licencia clase B con 2 años de antigüedad</span></li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Tarjeta de crédito a nombre del conductor principal</span></li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Pasaporte o cédula vigente; extranjeros con licencia internacional</span></li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span>Conductor adicional: $8.000 por día</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="preguntas" aria-labelledby="faq-title" style="padding-top:0">
+    <div class="wrap">
+      <div class="block-head">
+        <p class="eyebrow">Preguntas frecuentes</p>
+        <h2 id="faq-title">Antes de salir</h2>
+      </div>
+      <div class="faq">
+        <details>
+          <summary>¿Necesito experiencia previa en 4x4?<svg aria-hidden="true"><use href="#i-plus"/></svg></summary>
+          <p>No para rutas de dificultad baja o media. Para rutas sobre 4.000 m o con arena te pedimos haber hecho la inducción completa y llevar el comunicador satelital encendido.</p>
+        </details>
+        <details>
+          <summary>¿Puedo devolver la camioneta en otra sucursal?<svg aria-hidden="true"><use href="#i-plus"/></svg></summary>
+          <p>Sí. La devolución entre Puerto Montt y Santiago tiene un cargo fijo de $250.000; entre Calama y Santiago, $180.000.</p>
+        </details>
+        <details>
+          <summary>¿Qué pasa si se pincha un neumático en ruta?<svg aria-hidden="true"><use href="#i-plus"/></svg></summary>
+          <p>Llevas dos repuestos. Si los usas ambos, la asistencia satelital coordina el rescate más cercano sin costo dentro de Chile.</p>
+        </details>
+        <details>
+          <summary>¿Hasta cuándo puedo cancelar?<svg aria-hidden="true"><use href="#i-plus"/></svg></summary>
+          <p>Sin costo hasta 7 días antes del retiro. Después se cobra un día de arriendo.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta" aria-labelledby="cta-title">
+    <div class="wrap">
+      <h2 id="cta-title">La temporada austral se llena en octubre</h2>
+      <a class="btn" href="#reserva">Cotizar ahora <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Ruta Austral 4x4 es un sitio de ejemplo. Precios, flota y datos son ficticios.</p>
+    <p class="mono">Atención: +56 2 2000 0000 · reservas@rutaaustral4x4.example</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- Curvas de nivel del hero ---------- */
+  var canvas = document.getElementById("contours");
+  var ctx = canvas.getContext("2d");
+  function drawContours() {
+    var rect = canvas.getBoundingClientRect();
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, rect.width, rect.height);
+    var styles = getComputedStyle(document.documentElement);
+    var line = styles.getPropertyValue("--hero-line").trim();
+    var accent = styles.getPropertyValue("--accent").trim();
+    var peaks = [
+      { x: rect.width * 0.18, y: rect.height * 0.85, seed: 1.3 },
+      { x: rect.width * 0.82, y: rect.height * 0.12, seed: 4.1 }
+    ];
+    peaks.forEach(function (p) {
+      for (var r = 30; r < Math.max(rect.width, rect.height) * 0.9; r += 26) {
+        ctx.beginPath();
+        for (var a = 0; a <= Math.PI * 2 + 0.01; a += 0.05) {
+          var wobble = Math.sin(a * 3 + p.seed + r * 0.01) * r * 0.08 + Math.sin(a * 5 - p.seed) * r * 0.04;
+          var rr = r + wobble;
+          var x = p.x + Math.cos(a) * rr * 1.35;
+          var y = p.y + Math.sin(a) * rr;
+          if (a === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        var major = (r - 30) % 130 === 0;
+        ctx.strokeStyle = major ? accent : line;
+        ctx.globalAlpha = major ? 0.35 : 1;
+        ctx.lineWidth = major ? 1.4 : 1;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    });
+  }
+  drawContours();
+  var resizeTimer;
+  window.addEventListener("resize", function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(drawContours, 150);
+  });
+  if (window.matchMedia) {
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawContours);
+  }
+  new MutationObserver(drawContours).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+  /* ---------- Cotizador ---------- */
+  var RATES = { hilux: 79000, land: 98000, camper: 129000 };
+  var MIN_DAYS = 3;
+  var form = document.getElementById("reserva");
+  var desde = document.getElementById("desde");
+  var hasta = document.getElementById("hasta");
+  var modelo = document.getElementById("modelo");
+  var quoteDays = document.getElementById("quote-days");
+  var quoteTotal = document.getElementById("quote-total");
+  var summary = document.getElementById("error-summary");
+  var errorList = document.getElementById("error-list");
+  var success = document.getElementById("success");
+  var clp = new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 });
+
+  function isoDate(d) {
+    var m = String(d.getMonth() + 1).padStart(2, "0");
+    var day = String(d.getDate()).padStart(2, "0");
+    return d.getFullYear() + "-" + m + "-" + day;
+  }
+  function parse(v) {
+    if (!v) return null;
+    var p = v.split("-").map(Number);
+    return new Date(p[0], p[1] - 1, p[2]);
+  }
+  function daysBetween(a, b) {
+    return Math.round((Date.UTC(b.getFullYear(), b.getMonth(), b.getDate()) - Date.UTC(a.getFullYear(), a.getMonth(), a.getDate())) / 86400000);
+  }
+
+  var today = new Date();
+  desde.min = isoDate(today);
+  hasta.min = isoDate(today);
+
+  // Valores de ejemplo para que el cotizador muestre un cálculo al cargar.
+  var start = new Date(today); start.setDate(start.getDate() + 14);
+  var end = new Date(start); end.setDate(end.getDate() + 7);
+  desde.value = isoDate(start);
+  hasta.value = isoDate(end);
+
+  function updateQuote() {
+    var a = parse(desde.value), b = parse(hasta.value);
+    if (!a || !b || daysBetween(a, b) < 1) {
+      quoteDays.textContent = "Elige fechas para calcular";
+      quoteTotal.textContent = "—";
+      return;
+    }
+    var days = daysBetween(a, b);
+    var billed = Math.max(days, MIN_DAYS);
+    var rate = RATES[modelo.value];
+    quoteDays.textContent = billed + (billed === 1 ? " día" : " días") + " × " + clp.format(rate) + (days < MIN_DAYS ? " (mínimo 3)" : "");
+    quoteTotal.textContent = clp.format(billed * rate);
+  }
+
+  var rules = {
+    sucursal: function (el) { return el.value ? "" : "Elige la sucursal donde retirarás la camioneta."; },
+    desde: function (el) {
+      var d = parse(el.value);
+      if (!d) return "Indica la fecha de retiro.";
+      if (daysBetween(today, d) < 0) return "La fecha de retiro no puede ser anterior a hoy.";
+      return "";
+    },
+    hasta: function (el) {
+      var a = parse(desde.value), b = parse(el.value);
+      if (!b) return "Indica la fecha de devolución.";
+      if (a && daysBetween(a, b) < 1) return "La devolución debe ser al menos un día después del retiro.";
+      return "";
+    },
+    email: function (el) {
+      if (!el.value.trim()) return "Escribe tu correo para recibir la cotización.";
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim())) return "Revisa el correo; debe tener el formato nombre@dominio.cl.";
+      return "";
+    }
+  };
+
+  function validate(id) {
+    var el = document.getElementById(id);
+    var msg = rules[id](el);
+    var field = el.closest(".field");
+    var err = document.getElementById(id + "-err");
+    if (msg) {
+      field.setAttribute("data-invalid", "");
+      el.setAttribute("aria-invalid", "true");
+      el.setAttribute("aria-describedby", id + "-err");
+      err.textContent = msg;
+      err.hidden = false;
+    } else {
+      field.removeAttribute("data-invalid");
+      el.removeAttribute("aria-invalid");
+      el.setAttribute("aria-describedby", id === "email" ? "email-hint" : "");
+      err.hidden = true;
+    }
+    return msg;
+  }
+
+  Object.keys(rules).forEach(function (id) {
+    var el = document.getElementById(id);
+    el.addEventListener("blur", function () { validate(id); });
+    el.addEventListener("change", function () { if (el.closest(".field").hasAttribute("data-invalid")) validate(id); });
+  });
+  desde.addEventListener("change", function () {
+    hasta.min = desde.value || isoDate(today);
+    updateQuote();
+  });
+  hasta.addEventListener("change", updateQuote);
+  modelo.addEventListener("change", updateQuote);
+
+  document.querySelectorAll("[data-model]").forEach(function (link) {
+    link.addEventListener("click", function () {
+      modelo.value = link.getAttribute("data-model");
+      updateQuote();
+    });
+  });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    success.hidden = true;
+    var errors = [];
+    Object.keys(rules).forEach(function (id) {
+      var msg = validate(id);
+      if (msg) errors.push({ id: id, msg: msg });
+    });
+    errorList.innerHTML = "";
+    if (errors.length) {
+      errors.forEach(function (er) {
+        var li = document.createElement("li");
+        var a = document.createElement("a");
+        a.href = "#" + er.id;
+        a.textContent = er.msg;
+        a.addEventListener("click", function (ev) { ev.preventDefault(); document.getElementById(er.id).focus(); });
+        li.appendChild(a);
+        errorList.appendChild(li);
+      });
+      summary.hidden = false;
+      summary.focus();
+      return;
+    }
+    summary.hidden = true;
+    var email = document.getElementById("email").value.trim();
+    success.innerHTML = "";
+    var strong = document.createElement("strong");
+    strong.textContent = "Solicitud lista. ";
+    success.appendChild(strong);
+    success.appendChild(document.createTextNode("En un sitio real enviaríamos la cotización de " + quoteTotal.textContent + " a " + email + ". Este es un ejemplo y no se envió nada."));
+    success.hidden = false;
+  });
+
+  updateQuote();
+})();
+</script>
+</body>
+</html>
